@@ -1,57 +1,37 @@
-from flask import Flask, jsonify, render_template, request, redirect, url_for, flash
+from flask import Flask, request, jsonify, render_template
 import json
-import os
-from pymongo import MongoClient
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')  # from .env
 
-# MongoDB Atlas connection setup
-MONGO_URI = os.getenv('MONGO_URI')
-DB_NAME = os.getenv('DB_NAME')
-COLLECTION_NAME = os.getenv('COLLECTION_NAME')
-
-client = MongoClient(MONGO_URI)
-db = client[DB_NAME]
-collection = db[COLLECTION_NAME]
-
+# Home route
 @app.route('/')
-def hello_world():
-    return 'Hello, World!'
+def home():
+    return render_template('index.html')
 
-@app.route('/api')
-def api():
-    data_file = os.path.join(os.path.dirname(__file__), 'data.json')
-    try:
-        with open(data_file, 'r') as f:
-            data = json.load(f)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# API route
+@app.route('/api', methods=['GET'])
+def get_data():
+    with open('data.json', 'r') as f:
+        data = json.load(f)
     return jsonify(data)
 
-@app.route('/submit', methods=['GET', 'POST'])
-def submit():
-    error = None
-    if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        if not name or not email:
-            error = "Name and Email are required."
-        else:
-            try:
-                collection.insert_one({'name': name, 'email': email})
-                return redirect(url_for('success'))
-            except Exception as e:
-                error = f"Error: {str(e)}"
-    return render_template('submit.html', error=error)
+# Backend route (used later)
+@app.route('/submittodoitem', methods=['POST'])
+def submit_todo():
+    data = request.json
+    item = {
+        "itemName": data.get("itemName"),
+        "itemDescription": data.get("itemDescription")
+    }
 
-@app.route('/success')
-def success():
-    return render_template('success.html')
+    # Save to file (MongoDB later)
+    with open('data.json', 'r+') as f:
+        current = json.load(f)
+        current.append(item)
+        f.seek(0)
+        json.dump(current, f)
+
+    return jsonify({"message": "Item added"}), 201
 
 if __name__ == '__main__':
     app.run(debug=True)
