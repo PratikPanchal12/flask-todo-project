@@ -1,1 +1,6 @@
-[]
+[
+  {
+    "itemName": "Sample Task",
+    "itemDescription": "Updated JSON content"
+  }
+]
