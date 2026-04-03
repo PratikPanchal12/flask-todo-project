@@ -8,6 +8,7 @@
     {% if error %}
         <p style="color:red;">{{ error }}</p>
     {% endif %}
+    <!-- This form submits data to the server. The server will validate the input and respond accordingly. -->
     <form method="post">
         Name: <input type="text" name="name"><br>
         Email: <input type="email" name="email"><br>
